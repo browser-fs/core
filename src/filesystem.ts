@@ -4,6 +4,7 @@ import { join } from './emulation/path.js';
 import { Errno, ErrnoError } from './error.js';
 import { PreloadFile, parseFlag, type File } from './file.js';
 import { ZenFsType, type Stats } from './stats.js';
+import { EventEmitter } from 'eventemitter3';
 
 export type FileContents = ArrayBufferView | string;
 
@@ -74,7 +75,7 @@ export interface FileSystemMetadata {
  *
  * If you are extending this class, note that every path is an absolute path and all arguments are present.
  */
-export abstract class FileSystem {
+export abstract class FileSystem extends EventEmitter {
 	/**
 	 * Get metadata about the current file system
 	 */
@@ -98,7 +99,9 @@ export abstract class FileSystem {
 	_disableSync?: boolean;
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
-	public constructor(...args: any[]) {}
+	public constructor(...args: any[]) {
+		super();
+	}
 
 	public async ready(): Promise<void> {}
 
@@ -404,7 +407,7 @@ export function Async<T extends typeof FileSystem>(
 			const stats = file.statSync();
 			const buffer = new Uint8Array(stats.size);
 			file.readSync(buffer);
-			return new PreloadFile(this, path, flag, stats, buffer);
+			return new PreloadFile<this>(this, path, flag, stats, buffer);
 		}
 
 		public unlinkSync(path: string, cred: Cred): void {

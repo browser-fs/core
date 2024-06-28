@@ -20,8 +20,10 @@ export interface MutexLock extends PromiseWithResolvers<void> {
  * multiple requests interleaving.
  * @internal
  */
-export class LockedFS<FS extends FileSystem> implements FileSystem {
-	constructor(public readonly fs: FS) {}
+export class LockedFS<FS extends FileSystem> extends FileSystem {
+	constructor(public readonly fs: FS) {
+		super();
+	}
 
 	/**
 	 * The current locks
