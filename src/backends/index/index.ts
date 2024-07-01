@@ -56,20 +56,6 @@ export class Index extends Map<string, Stats> {
 	}
 
 	/**
-	 * Returns the files in the directory `dir`.
-	 * This is expensive so it is only called once per directory.
-	 */
-	protected dirEntries(dir: string): string[] {
-		const entries = [];
-		for (const entry of this.keys()) {
-			if (dirname(entry) == dir) {
-				entries.push(basename(entry));
-			}
-		}
-		return entries;
-	}
-
-	/**
 	 * Loads the index from JSON data
 	 */
 	public fromJSON(json: IndexData): void {
@@ -82,7 +68,12 @@ export class Index extends Map<string, Stats> {
 		for (const [path, data] of Object.entries(json.entries)) {
 			const stats = new Stats(data);
 			if (stats.isDirectory()) {
-				stats.fileData = encode(JSON.stringify(this.dirEntries(path)));
+				const reImmediateSubdirs = new RegExp(`^${path}/[^/]+$`);
+				const immediateSubdirs = Object.keys(json.entries)
+					.filter(item => reImmediateSubdirs.test(item))
+					.map(item => basename(item));
+				immediateSubdirs.splice(immediateSubdirs.indexOf(path), 1);
+				stats.fileData = encode(JSON.stringify(immediateSubdirs));
 			}
 			this.set(path, stats);
 		}
